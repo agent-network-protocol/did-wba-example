@@ -61,7 +61,7 @@ async def client_example(unique_id: str = None, silent: bool = False, from_chat:
         from_chat: Whether the call is from chat thread
     """
     if msg is None:
-        msg = "ANP客户端的问候，请回复我今天北京的"
+        msg = "ANP客户端的问候，请回复我今天北京的天气"
     try:
         # 1. Generate or load DID document
         if not unique_id:

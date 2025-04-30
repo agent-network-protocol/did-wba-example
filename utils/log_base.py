@@ -40,7 +40,7 @@ def setup_logging(level=logging.INFO):
         if not os.path.exists(log_dir):
             os.system("sudo mkdir -p " + log_dir)
             os.system(
-                f"sudo chown -R {os.getenv('USER')}:{os.getenv('USER')} " + log_dir
+                f"sudo chown -R {os.getenv('USER')} " + log_dir
             )
         os.makedirs(log_dir, exist_ok=True)
     except Exception as e:

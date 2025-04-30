@@ -1,4 +1,4 @@
-如果你是小白，可以通过如下方式从零开始运行
+如果你是小白，可以通过如下方式从零开始运行：
 # Windows
 在设置Python开发环境时，通常会有一些工具需要全局安装，而其他工具则适合在项目的虚拟环境中安装。以下是一个理想的安装顺序和建议：
 
@@ -52,17 +52,14 @@
      # 在第二个终端窗口启动客户端，指定不同端口
    python did_server.py --client --port 8001
    ```
-6. logs目录无权限
-    mac下可以通过find命令查找并修改权限
-    ```bash
-    find logs -type d -exec chmod 777 {} \;
-    find logs -type f -exec chmod 666 {} \;
-    ```
 
 
 
 
 # Mac
+
+本项目要求 python 版本在 3.10 以上。
+
 在设置Python开发环境时，通常会有一些工具需要全局安装，而其他工具则适合在项目的虚拟环境中安装。以下是一个理想的安装顺序和建议：
 
 ## 全局安装
@@ -80,7 +77,7 @@
    pipx ensurepath
     ```
 ## 虚拟环境安装
-1. .venv : 在项目目录下创建虚拟环境，用于隔离项目的依赖。
+1. .venv : 在项目目录下创建虚拟环境，用于隔离项目的依赖。（也可以跳过此步，poetry install 会自动创建）
    
    ```bash
    python3 -m venv .venv
@@ -92,7 +89,7 @@
    where python
    poetry install
     ```
-3. 退出虚拟环境:
+3. 等实验结束后可退出虚拟环境:
 
    ```bash
    deactivate
@@ -105,19 +102,17 @@
    ```
    cp .env.example .env
    ```
-3. 编辑.env文件，设置必要的配置项
-4. 启动服务器
+3. 编辑 .env 文件，设置必要的配置项，如 OPENROUTER_API_KEY，可到 [open router 官网](https://openrouter.ai/) 生成 API key，本 demo 使用免费模型，无需充值。
+4. 启动服务器。初次启动可能要创建 logs 目录，使用了 sudo 命令，需要输入管理员密码。
    ```bash
    python did_server.py
+   # 启动成功后执行
+   start server
    ```
 5. 启动客户端
    ```bash
      # 在第二个终端窗口启动客户端，指定不同端口
    python did_server.py --client --port 8001
    ```
-6. logs目录无权限
-    mac下可以通过find命令查找并修改权限
-    ```bash
-    find logs -type d -exec chmod 777 {} \;
-    find logs -type f -exec chmod 666 {} \;
-    ```
+
+启动客户端后会自动连接 server 并发送问候信息，如果发送成功会看到提示。然后就可以根据 help 命令中的提示进一步探索与其他 agent 交互的场景。
