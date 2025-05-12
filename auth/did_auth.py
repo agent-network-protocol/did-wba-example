@@ -301,8 +301,8 @@ async def send_authenticated_request(target_url: str, auth_client: DIDWbaAuthHea
                     status = response.status
                     response_data = await response.json() if status == 200 else {}
                     # x = dict(response.headers)
-                    # token = auth_client.update_token(target_url, dict(response.headers))
-                    token = auth_client.update_token(target_url, response_data )
+                    token = auth_client.update_token(target_url, dict(response.headers))
+                    # token = auth_client.update_token(target_url, response_data )
                     return status, response_data, token
             elif method.upper() == "POST":
                 async with session.post(

@@ -6,35 +6,29 @@
     "configurations": [
         
         {
-            "name": "mcp-debug",
+            "name": "mac-debug-did-server",
             "type": "debugpy",
-            "request": "attach",
-            "connect": {
-                "host": "localhost",
-                "port": 5678
-            },
-            "pathMappings": [
-                {
-                    "localRoot": "${workspaceFolder}",
-                    "remoteRoot": "${workspaceFolder}"
-                },
-                {
-                    "localRoot": "/Users/seanzhang/seanwork/did-wba-example",
-                    "remoteRoot": "/users/seanzhang/seanwork/did-wba-example"
-                }
-            ],
-            "justMyCode": false,
-            "preLaunchTask": "activate-venv-and-run-mcp"
+            "request": "launch",
+            "program": "${workspaceFolder}/did_server.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "preLaunchTask": "mac_activate-venv",
+            "python": "${workspaceFolder}/.venv/bin/python",
         },
         {
-            "name": "Attach to Running MCP Server",
+            "name": "mac-debug-did-server-clientmode",
             "type": "debugpy",
-            "request": "attach",
-            "processId": "${command:pickProcess}",
-            "justMyCode": false
+            "request": "launch",
+            "program": "${workspaceFolder}/did_server.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "preLaunchTask": "mac_activate-venv",
+            "args": ["--client", "--port", "9988"],
+            "python": "${workspaceFolder}/.venv/bin/python",
         },
         {
-            "name": "Python Debugger: Current File with Arguments all code",
+            "name": "Python Debugger: Current File with Arguments",
+
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",

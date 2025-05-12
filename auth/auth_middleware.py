@@ -2,6 +2,7 @@
 Authentication middleware module.
 """
 import logging
+import json
 from typing import List, Optional, Callable
 from fastapi import Request, HTTPException, Response
 from fastapi.responses import JSONResponse
@@ -102,8 +103,27 @@ async def auth_middleware(request: Request, call_next: Callable) -> Response:
     """
     try:
         # Add user data to request state if authenticated
-        request.state.user = await authenticate_request(request)
-        return await call_next(request)
+        response_auth = await authenticate_request(request)
+        headers = dict(request.headers) # 读取请求头
+        request.state.headers = headers
+        logging.info(f"Authenticated user: {request.state.headers}")
+        headers = dict(request.headers) # 读取请求头
+        request.state.headers = headers  # 存储在 request.state
+        if response_auth is not None:
+            response = await call_next(request)
+            if response_auth.get('token_type', " ") == 'bearer':
+                response.headers['authorization'] = f"bearer "+response_auth['access_token']
+                return response
+            else:
+                response.headers['authorization'] = headers['authorization']
+                return response
+
+        else:
+            logging.info("Authentication skipped for exempt path")
+            return await call_next(request)
+
+
+
     
     except HTTPException as exc:
         logging.error(f"Authentication error: {exc.detail}")
