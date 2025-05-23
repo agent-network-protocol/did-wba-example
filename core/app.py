@@ -26,12 +26,6 @@ def create_app() -> FastAPI:
         redoc_url="/redoc" if settings.DEBUG else None,
     )
     
-    # Configure logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    )
-    
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,

@@ -249,9 +249,9 @@ async def generate_or_load_did(unique_id: str = None) -> Tuple[Dict, Dict, str]:
     host = f"localhost"
     did_document, keys = create_did_wba_document(
         hostname=host,
-        port=settings.PORT,
+        port=settings.LOCAL_PORT,
         path_segments=["wba", "user", unique_id],
-        agent_description_url=f"http://{host}:{settings.PORT}/agents/example/ad.json"
+        agent_description_url=f"http://{host}:{settings.LOCAL_PORT}/agents/example/ad.json"
     )
     
     # 保存私钥和DID文档
@@ -301,8 +301,8 @@ async def send_authenticated_request(target_url: str, auth_client: DIDWbaAuthHea
                     status = response.status
                     response_data = await response.json() if status == 200 else {}
                     # x = dict(response.headers)
-                    # token = auth_client.update_token(target_url, dict(response.headers))
-                    token = auth_client.update_token(target_url, response_data )
+                    token = auth_client.update_token(target_url, dict(response.headers))
+                    # token = auth_client.update_token(target_url, response_data )
                     return status, response_data, token
             elif method.upper() == "POST":
                 async with session.post(

@@ -3,6 +3,9 @@ DID WBA Example with both Client and Server capabilities.
 """
 import os
 import json
+import threading
+import time
+
 import logging
 import uvicorn
 import asyncio
@@ -101,10 +104,6 @@ async def client_example(unique_id: str = None):
         logging.error(f"Error in client example: {e}")
 
 
-import threading
-import time
-
-
 if __name__ == "__main__":
     
     set_log_color_level(logging.INFO)
@@ -113,13 +112,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="DID WBA Example with Client and Server capabilities")
     parser.add_argument("--client", action="store_true", help="Run client example")
     parser.add_argument("--unique-id", type=str, help="Unique ID for client example", default=None)
-    parser.add_argument("--port", type=int, help=f"Server port (default: {settings.PORT})", default=settings.PORT)
+    parser.add_argument("--port", type=int, help=f"Server port (default: {settings.LOCAL_PORT})", default=settings.LOCAL_PORT)
     
     args = parser.parse_args()
     client_args = args  # 保存到全局变量以供启动事件使用
     
-    if args.port != settings.PORT:
-        settings.PORT = args.port
+    if args.port != settings.LOCAL_PORT:
+        settings.LOCAL_PORT = args.port
     
     # 如果开启了客户端模式，在单独线程中运行客户端示例
     if args.client:
@@ -133,12 +132,12 @@ if __name__ == "__main__":
         thread.start()
         logging.info("客户端线程已启动，将在2秒后执行")
     
-    logging.info(f"Starting DID WBA Server on {settings.HOST}:{settings.PORT}")
+    logging.info(f"Starting DID WBA Server on {settings.LOCAL_HOST}:{settings.LOCAL_PORT}")
     
     # 运行服务器
     uvicorn.run(
         "did_server:app",
-        host=settings.HOST,
-        port=settings.PORT,
+        host=settings.LOCAL_HOST,
+        port=settings.LOCAL_PORT,
         reload=settings.DEBUG
     )
