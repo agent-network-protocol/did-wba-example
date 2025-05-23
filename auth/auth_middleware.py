@@ -72,14 +72,14 @@ async def authenticate_request(request: Request) -> Optional[dict]:
         logging.info(
             f"Checking if {request.url.path} matches exempt path {exempt_path}"
         )
-        # 特殊处理根路径"/"，它只应该精确匹配
+        # Special handling for root path "/", it should only match exactly
         if exempt_path == "/":
             if request.url.path == "/":
                 logging.info(
                     f"Path {request.url.path} is exempt from authentication (matched root path)"
                 )
                 return None
-        # 其他路径的匹配逻辑
+        # Matching logic for other paths
         elif request.url.path == exempt_path or (
             exempt_path.endswith("/") and request.url.path.startswith(exempt_path)
         ):
@@ -88,7 +88,7 @@ async def authenticate_request(request: Request) -> Optional[dict]:
             )
             return None
 
-    # 特别检查 /wba/test 路径，确保它不被视为免认证
+    # Special check for /wba/test path to ensure it's not treated as exempt
     if request.url.path == "/wba/test":
         logging.info("Path /wba/test requires authentication (special check)")
 
@@ -112,11 +112,11 @@ async def auth_middleware(request: Request, call_next: Callable) -> Response:
     try:
         # Add user data to request state if authenticated
         response_auth = await authenticate_request(request)
-        headers = dict(request.headers)  # 读取请求头
+        headers = dict(request.headers)  # Read request headers
         request.state.headers = headers
         logging.info(f"Authenticated user: {request.state.headers}")
-        headers = dict(request.headers)  # 读取请求头
-        request.state.headers = headers  # 存储在 request.state
+        headers = dict(request.headers)  # Read request headers
+        request.state.headers = headers  # Store in request.state
         if response_auth is not None:
             response = await call_next(request)
             if response_auth.get("token_type", " ") == "bearer":

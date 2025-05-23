@@ -87,17 +87,17 @@ async def test_endpoint(request: Request) -> Dict:
 
     try:
         if auth_data != "":
-            if auth_data.startswith("DIDWba"):  # did wba认证头
+            if auth_data.startswith("DIDWba"):  # DID WBA authentication header
                 auth_data = auth_data.split(" ", 1)[1]
                 auth_dict = parse_auth_str_to_dict(auth_data)
                 user = auth_dict.get("did")
-            elif auth_data.startswith("Bearer "):  # bearer token认证头
+            elif auth_data.startswith("Bearer "):  # Bearer token authentication header
                 auth_data = auth_data.split(" ", 1)[1]
                 user = await handle_bearer_auth(auth_data)
                 user = user.get("did")
 
     except Exception as e:
-        logging.warning(f"解析认证数据时出错: {e}")
+        logging.warning(f"Error parsing authentication data: {e}")
         user = None
 
     if not user:
@@ -116,15 +116,15 @@ async def test_endpoint(request: Request) -> Dict:
 
 def parse_auth_str_to_dict(auth_str: str) -> dict:
     """
-    将类似于 'key1="value1", key2="value2"' 的字符串解析为字典
+    Parse a string like 'key1="value1", key2="value2"' into a dictionary.
     """
     result = {}
     try:
-        # 先按逗号分割，再按等号分割
+        # Split by comma first, then by equals sign
         for kv in auth_str.split(", "):
             if "=" in kv:
                 k, v = kv.split("=", 1)
                 result[k.strip()] = v.strip('"')
     except Exception as e:
-        logging.warning(f"解析认证字符串为字典时出错: {e}")
+        logging.warning(f"Error parsing authentication string to dictionary: {e}")
     return result

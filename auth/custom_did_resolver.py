@@ -1,5 +1,5 @@
 """
-自定义DID文档解析器，用于本地测试环境
+Custom DID document resolver for local testing environment.
 """
 
 import os
@@ -13,59 +13,59 @@ from urllib.parse import unquote, urlparse
 
 async def resolve_local_did_document(did: str) -> Optional[Dict]:
     """
-    解析本地DID文档
+    Resolve local DID document.
 
     Args:
-        did: DID标识符，例如did:wba:localhost%3A8000:wba:user:123456
+        did: DID identifier, e.g., did:wba:localhost%3A8000:wba:user:123456
 
     Returns:
-        Optional[Dict]: 解析出的DID文档，如果解析失败则返回None
+        Optional[Dict]: Resolved DID document, or None if resolution fails
     """
     try:
-        logging.info(f"解析本地DID文档: {did}")
+        logging.info(f"Resolving local DID document: {did}")
 
-        # 解析DID标识符
+        # Parse DID identifier
         parts = did.split(":")
         if len(parts) < 5 or parts[0] != "did" or parts[1] != "wba":
-            logging.error(f"无效的DID格式: {did}")
+            logging.error(f"Invalid DID format: {did}")
             return None
 
-        # 提取主机名、端口和用户ID
+        # Extract hostname, port and user ID
         hostname = parts[2]
-        # 解码端口部分，如果存在
+        # Decode port part if present
         if "%3A" in hostname:
-            hostname = unquote(hostname)  # 将 %3A 解码为 :
+            hostname = unquote(hostname)  # Decode %3A to :
 
         path_segments = parts[3:]
         user_id = path_segments[-1]
 
-        logging.info(f"DID 解析结果 - 主机名: {hostname}, 用户ID: {user_id}")
+        logging.info(f"DID resolution result - hostname: {hostname}, user ID: {user_id}")
 
-        # 查找本地文件系统中的DID文档
+        # Search for DID document in local filesystem
         current_dir = Path(__file__).parent.parent.absolute()
         did_path = current_dir / "did_keys" / f"user_{user_id}" / "did.json"
 
         if did_path.exists():
-            logging.info(f"找到本地DID文档: {did_path}")
+            logging.info(f"Found local DID document: {did_path}")
             with open(did_path, "r", encoding="utf-8") as f:
                 did_document = json.load(f)
             return did_document
 
-        # 如果本地未找到，尝试通过HTTP请求获取
+        # If not found locally, try to get via HTTP request
         http_url = f"http://{hostname}/wba/user/{user_id}/did.json"
-        logging.info(f"尝试通过HTTP获取DID文档: {http_url}")
+        logging.info(f"Attempting to fetch DID document via HTTP: {http_url}")
 
-        # 这里使用异步HTTP请求
+        # Use async HTTP request here
         async with aiohttp.ClientSession() as session:
             async with session.get(http_url, ssl=False) as response:
                 if response.status == 200:
                     did_document = await response.json()
-                    logging.info("成功通过HTTP获取DID文档")
+                    logging.info("Successfully fetched DID document via HTTP")
                     return did_document
                 else:
-                    logging.error(f"HTTP请求失败，状态码: {response.status}")
+                    logging.error(f"HTTP request failed, status code: {response.status}")
                     return None
 
     except Exception as e:
-        logging.error(f"解析DID文档时出错: {e}")
+        logging.error(f"Error resolving DID document: {e}")
         return None

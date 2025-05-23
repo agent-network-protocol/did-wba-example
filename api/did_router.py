@@ -24,7 +24,7 @@ async def get_did_document(user_id: str) -> Dict:
     Returns:
         Dict: DID document
     """
-    # 构建DID文档路径
+    # Build DID document path
     current_dir = Path(__file__).parent.parent.absolute()
     did_path = (
         current_dir
@@ -38,7 +38,7 @@ async def get_did_document(user_id: str) -> Dict:
             status_code=404, detail=f"DID document not found for user {user_id}"
         )
 
-    # 加载DID文档
+    # Load DID document
     try:
         with open(did_path, "r", encoding="utf-8") as f:
             did_document = json.load(f)
@@ -60,15 +60,15 @@ async def store_did_document(user_id: str, did_document: Dict) -> Dict:
     Returns:
         Dict: Operation result
     """
-    # 构建存储路径
+    # Build storage path
     current_dir = Path(__file__).parent.parent.absolute()
     user_dir = current_dir / settings.DID_DOCUMENTS_PATH / f"user_{user_id}"
     did_path = user_dir / settings.DID_DOCUMENT_FILENAME
 
-    # 创建目录（如果不存在）
+    # Create directory if it doesn't exist
     user_dir.mkdir(parents=True, exist_ok=True)
 
-    # 保存DID文档
+    # Save DID document
     try:
         with open(did_path, "w", encoding="utf-8") as f:
             json.dump(did_document, f, indent=2)

@@ -27,7 +27,7 @@ from auth.custom_did_resolver import resolve_local_did_document
 from core.config import settings
 from auth.token_auth import create_access_token
 
-# 存储服务端生成的nonce
+# Store server-generated nonces
 VALID_SERVER_NONCES: Dict[str, datetime] = {}
 
 
@@ -148,30 +148,30 @@ async def handle_did_auth(authorization: str, domain: str) -> Dict:
                 status_code=401, detail="Invalid authorization header format"
             )
 
-        # 解包顺序：(did, nonce, timestamp, verification_method, signature)
+        # Unpack order: (did, nonce, timestamp, verification_method, signature)
         did, nonce, timestamp, keyid, signature = header_parts
 
         logging.info(f"Processing DID WBA authentication - DID: {did}, Key ID: {keyid}")
 
-        # 验证时间戳
+        # Verify timestamp
         if not verify_timestamp(timestamp):
             raise HTTPException(status_code=401, detail="Timestamp expired or invalid")
 
-        # 验证 nonce 有效性
+        # Verify nonce validity
         # if not is_valid_server_nonce(nonce):
         #     logging.error(f"Invalid or expired nonce: {nonce}")
         #     raise HTTPException(status_code=401, detail="Invalid or expired nonce")
 
-        # 尝试使用自定义解析器解析DID文档
+        # Try to resolve DID document using custom resolver
         did_document = await resolve_local_did_document(did)
 
-        # 如果自定义解析器失败，尝试使用标准解析器
+        # If custom resolver fails, try using standard resolver
         if not did_document:
-            logging.info(f"本地DID解析失败，尝试使用标准解析器 for DID: {did}")
+            logging.info(f"Local DID resolution failed, trying standard resolver for DID: {did}")
             try:
                 did_document = await resolve_did_wba_document(did)
             except Exception as e:
-                logging.error(f"标准DID解析器也失败: {e}")
+                logging.error(f"Standard DID resolver also failed: {e}")
                 did_document = None
 
         if not did_document:
@@ -179,36 +179,36 @@ async def handle_did_auth(authorization: str, domain: str) -> Dict:
                 status_code=401, detail="Failed to resolve DID document"
             )
 
-        logging.info(f"成功解析DID文档: {did}")
+        logging.info(f"Successfully resolved DID document: {did}")
 
-        # 验证签名
+        # Verify signature
         try:
-            # 重新构造完整的授权头
+            # Reconstruct the complete authorization header
             full_auth_header = authorization
 
-            # 调用验证函数
+            # Call verification function
             is_valid, message = verify_auth_header_signature(
                 auth_header=full_auth_header,
                 did_document=did_document,
                 service_domain=domain,
             )
 
-            logging.info(f"签名验证结果: {is_valid}, 消息: {message}")
+            logging.info(f"Signature verification result: {is_valid}, message: {message}")
 
             if not is_valid:
                 raise HTTPException(
                     status_code=401, detail=f"Invalid signature: {message}"
                 )
         except Exception as e:
-            logging.error(f"验证签名时出错: {e}")
+            logging.error(f"Error verifying signature: {e}")
             raise HTTPException(
                 status_code=401, detail=f"Error verifying signature: {str(e)}"
             )
 
-        # 生成访问令牌
+        # Generate access token
         access_token = create_access_token(data={"sub": did, "keyid": keyid})
 
-        logging.info("认证成功，已生成访问令牌")
+        logging.info("Authentication successful, access token generated")
 
         return {"access_token": access_token, "token_type": "bearer", "did": did}
 
@@ -220,21 +220,21 @@ async def handle_did_auth(authorization: str, domain: str) -> Dict:
         raise HTTPException(status_code=500, detail="Authentication error")
 
 
-# 客户端相关功能
+# Client-related functions
 async def generate_or_load_did(unique_id: str = None) -> Tuple[Dict, Dict, str]:
     """
-    生成新的DID文档或者加载已经存在的DID文档
+    Generate a new DID document or load an existing DID document.
 
     Args:
-        unique_id: 可选的用户唯一标识符
+        unique_id: Optional user unique identifier
 
     Returns:
-        Tuple[Dict, Dict, str]: 包含DID文档、密钥和DID路径
+        Tuple[Dict, Dict, str]: Contains DID document, keys, and DID path
     """
     if not unique_id:
         unique_id = secrets.token_hex(8)
 
-    # 检查是否已经有DID文档
+    # Check if DID document already exists
     current_dir = Path(__file__).parent.parent.absolute()
     user_dir = current_dir / settings.DID_DOCUMENTS_PATH / f"user_{unique_id}"
     did_path = user_dir / settings.DID_DOCUMENT_FILENAME
@@ -242,16 +242,16 @@ async def generate_or_load_did(unique_id: str = None) -> Tuple[Dict, Dict, str]:
     if did_path.exists():
         logging.info(f"Loading existing DID document from {did_path}")
 
-        # 加载DID文档
+        # Load DID document
         with open(did_path, "r", encoding="utf-8") as f:
             did_document = json.load(f)
 
-        # 创建空的keys字典，因为我们已经有了私钥文件
+        # Create empty keys dictionary since we already have private key file
         keys = {}
 
         return did_document, keys, str(user_dir)
 
-    # 创建DID文档
+    # Create DID document
     logging.info("Creating new DID document...")
     host = "localhost"
     did_document, keys = create_did_wba_document(
@@ -261,17 +261,17 @@ async def generate_or_load_did(unique_id: str = None) -> Tuple[Dict, Dict, str]:
         agent_description_url=f"http://{host}:{settings.LOCAL_PORT}/agents/example/ad.json",
     )
 
-    # 保存私钥和DID文档
+    # Save private key and DID document
     user_dir.mkdir(parents=True, exist_ok=True)
 
-    # 保存私钥
+    # Save private key
     for method_fragment, (private_key_bytes, _) in keys.items():
         private_key_path = user_dir / f"{method_fragment}_private.pem"
         with open(private_key_path, "wb") as f:
             f.write(private_key_bytes)
         logging.info(f"Saved private key '{method_fragment}' to {private_key_path}")
 
-    # 保存DID文档
+    # Save DID document
     with open(did_path, "w", encoding="utf-8") as f:
         json.dump(did_document, f, indent=2)
     logging.info(f"Saved DID document to {did_path}")
@@ -286,19 +286,19 @@ async def send_authenticated_request(
     json_data: Optional[Dict] = None,
 ) -> Tuple[int, Dict[str, Any], Optional[str]]:
     """
-    发送带有DID WBA认证的请求
+    Send request with DID WBA authentication.
 
     Args:
-        target_url: 目标URL
-        auth_client: DID WBA认证客户端
-        method: HTTP方法
-        json_data: 可选的JSON数据
+        target_url: Target URL
+        auth_client: DID WBA authentication client
+        method: HTTP method
+        json_data: Optional JSON data
 
     Returns:
-        Tuple[int, Dict[str, Any], Optional[str]]: 状态码、响应和令牌
+        Tuple[int, Dict[str, Any], Optional[str]]: Status code, response, and token
     """
     try:
-        # 获取认证头
+        # Get authentication headers
         auth_headers = auth_client.get_auth_header(target_url)
 
         logging.info(
@@ -334,16 +334,16 @@ async def send_request_with_token(
     target_url: str, token: str, method: str = "GET", json_data: Optional[Dict] = None
 ) -> Tuple[int, Dict[str, Any]]:
     """
-    使用已获取的令牌发送请求
+    Send request using acquired token.
 
     Args:
-        target_url: 目标URL
-        token: 访问令牌
-        method: HTTP方法
-        json_data: 可选的JSON数据
+        target_url: Target URL
+        token: Access token
+        method: HTTP method
+        json_data: Optional JSON data
 
     Returns:
-        Tuple[int, Dict[str, Any]]: 状态码和响应
+        Tuple[int, Dict[str, Any]]: Status code and response
     """
     try:
         headers = {"Authorization": f"Bearer {token}"}
