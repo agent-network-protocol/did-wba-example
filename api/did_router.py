@@ -1,12 +1,12 @@
 """
 DID document API router.
 """
-import os
+
 import json
 import logging
-from typing import Dict, Optional
+from typing import Dict
 from pathlib import Path
-from fastapi import APIRouter, Request, Response, HTTPException
+from fastapi import APIRouter, HTTPException
 
 from core.config import settings
 
@@ -17,23 +17,30 @@ router = APIRouter(tags=["did"])
 async def get_did_document(user_id: str) -> Dict:
     """
     Retrieve a DID document by user ID.
-    
+
     Args:
         user_id: User identifier
-        
+
     Returns:
         Dict: DID document
     """
     # 构建DID文档路径
     current_dir = Path(__file__).parent.parent.absolute()
-    did_path = current_dir / settings.DID_DOCUMENTS_PATH / f"user_{user_id}" / settings.DID_DOCUMENT_FILENAME
-    
+    did_path = (
+        current_dir
+        / settings.DID_DOCUMENTS_PATH
+        / f"user_{user_id}"
+        / settings.DID_DOCUMENT_FILENAME
+    )
+
     if not did_path.exists():
-        raise HTTPException(status_code=404, detail=f"DID document not found for user {user_id}")
-    
+        raise HTTPException(
+            status_code=404, detail=f"DID document not found for user {user_id}"
+        )
+
     # 加载DID文档
     try:
-        with open(did_path, 'r', encoding='utf-8') as f:
+        with open(did_path, "r", encoding="utf-8") as f:
             did_document = json.load(f)
         return did_document
     except Exception as e:
@@ -45,11 +52,11 @@ async def get_did_document(user_id: str) -> Dict:
 async def store_did_document(user_id: str, did_document: Dict) -> Dict:
     """
     Store a DID document for a user.
-    
+
     Args:
         user_id: User identifier
         did_document: DID document to store
-        
+
     Returns:
         Dict: Operation result
     """
@@ -57,19 +64,19 @@ async def store_did_document(user_id: str, did_document: Dict) -> Dict:
     current_dir = Path(__file__).parent.parent.absolute()
     user_dir = current_dir / settings.DID_DOCUMENTS_PATH / f"user_{user_id}"
     did_path = user_dir / settings.DID_DOCUMENT_FILENAME
-    
+
     # 创建目录（如果不存在）
     user_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # 保存DID文档
     try:
-        with open(did_path, 'w', encoding='utf-8') as f:
+        with open(did_path, "w", encoding="utf-8") as f:
             json.dump(did_document, f, indent=2)
-        
+
         return {
             "status": "success",
             "message": f"DID document stored for user {user_id}",
-            "path": str(did_path)
+            "path": str(did_path),
         }
     except Exception as e:
         logging.error(f"Error storing DID document: {e}")
@@ -80,7 +87,7 @@ async def store_did_document(user_id: str, did_document: Dict) -> Dict:
 async def get_agent_description() -> Dict:
     """
     Get agent description document.
-    
+
     Returns:
         Dict: Agent description
     """
@@ -89,15 +96,12 @@ async def get_agent_description() -> Dict:
         "name": "DID WBA Example Agent",
         "description": "An example agent implementing DID WBA authentication",
         "version": "0.1.0",
-        "capabilities": [
-            "did-wba-authentication",
-            "token-authentication"
-        ],
+        "capabilities": ["did-wba-authentication", "token-authentication"],
         "endpoints": {
             "auth": "/auth/did-wba",
             "verify": "/auth/verify",
-            "test": "/wba/test"
+            "test": "/wba/test",
         },
         "owner": "DID WBA Example",
-        "created_at": "2025-04-21T00:00:00Z"
+        "created_at": "2025-04-21T00:00:00Z",
     }

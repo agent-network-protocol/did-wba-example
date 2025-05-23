@@ -1,7 +1,7 @@
 """
 FastAPI application initialization.
 """
-import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,7 +13,7 @@ from auth.auth_middleware import auth_middleware
 def create_app() -> FastAPI:
     """
     Create and configure the FastAPI application.
-    
+
     Returns:
         FastAPI: Configured application instance
     """
@@ -25,7 +25,7 @@ def create_app() -> FastAPI:
         docs_url="/docs" if settings.DEBUG else None,
         redoc_url="/redoc" if settings.DEBUG else None,
     )
-    
+
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,
@@ -34,15 +34,15 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    
+
     # Add authentication middleware
     @app.middleware("http")
     async def auth_middleware_wrapper(request, call_next):
         return await auth_middleware(request, call_next)
-    
+
     # Include routers
     app.include_router(auth_router.router)
     app.include_router(did_router.router)
     app.include_router(ad_router.router)
-    
+
     return app

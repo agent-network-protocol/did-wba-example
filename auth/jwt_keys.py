@@ -9,9 +9,13 @@ from core.config import settings
 
 # Ensure key files exist
 if not os.path.exists(settings.JWT_PRIVATE_KEY_PATH):
-    raise FileNotFoundError(f"JWT private key not found at: {settings.JWT_PRIVATE_KEY_PATH}")
+    raise FileNotFoundError(
+        f"JWT private key not found at: {settings.JWT_PRIVATE_KEY_PATH}"
+    )
 if not os.path.exists(settings.JWT_PUBLIC_KEY_PATH):
-    raise FileNotFoundError(f"JWT public key not found at: {settings.JWT_PUBLIC_KEY_PATH}")
+    raise FileNotFoundError(
+        f"JWT public key not found at: {settings.JWT_PUBLIC_KEY_PATH}"
+    )
 
 
 def get_jwt_private_key(key_path: str = settings.JWT_PRIVATE_KEY_PATH) -> Optional[str]:
