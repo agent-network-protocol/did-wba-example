@@ -4,7 +4,7 @@
 
 This is a DID WBA method example implemented using FastAPI and Agent_Connect library, supporting both client and server functionality.
 
-For detailed technical documentation, please refer to [Technical Documentation](/doc/技术说明文档.md)
+For detailed technical documentation, please refer to [Technical Documentation](/doc/technical_documentation_en.md)
 
 ## Features
 
