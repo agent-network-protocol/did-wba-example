@@ -2,13 +2,12 @@
 Custom DID document resolver for local testing environment.
 """
 
-import os
 import json
 import logging
 import aiohttp
 from pathlib import Path
 from typing import Dict, Optional
-from urllib.parse import unquote, urlparse
+from urllib.parse import unquote
 
 
 async def resolve_local_did_document(did: str) -> Optional[Dict]:
