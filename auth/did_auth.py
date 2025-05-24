@@ -6,8 +6,6 @@ import json
 import logging
 import traceback
 import secrets
-import string
-import random
 import aiohttp
 from typing import Dict, Tuple, Optional, Any
 from datetime import datetime, timezone, timedelta
@@ -31,25 +29,10 @@ from auth.token_auth import create_access_token
 VALID_SERVER_NONCES: Dict[str, datetime] = {}
 
 
-def generate_nonce(length: int = 16) -> str:
-    """
-    Generate a random nonce of specified length.
-
-    Args:
-        length: Length of the nonce to generate
-
-    Returns:
-        str: Generated nonce
-    """
-    characters = string.ascii_letters + string.digits
-    nonce = "".join(random.choice(characters) for _ in range(length))
-    VALID_SERVER_NONCES[nonce] = datetime.now(timezone.utc)
-    return nonce
-
-
 def is_valid_server_nonce(nonce: str) -> bool:
     """
     Check if a nonce is valid and not expired.
+    Each nonce can only be used once (proper nonce behavior).
 
     Args:
         nonce: The nonce to check
@@ -57,15 +40,25 @@ def is_valid_server_nonce(nonce: str) -> bool:
     Returns:
         bool: Whether the nonce is valid
     """
-    if nonce not in VALID_SERVER_NONCES:
-        return True
-
-    nonce_time = VALID_SERVER_NONCES[nonce]
     current_time = datetime.now(timezone.utc)
-
-    return current_time - nonce_time <= timedelta(
-        minutes=settings.NONCE_EXPIRATION_MINUTES
-    )
+    
+    # Clean up expired nonces first
+    expired_nonces = [
+        n for n, t in VALID_SERVER_NONCES.items()
+        if current_time - t > timedelta(minutes=settings.NONCE_EXPIRATION_MINUTES)
+    ]
+    for n in expired_nonces:
+        del VALID_SERVER_NONCES[n]
+    
+    # If nonce was already used, reject it
+    if nonce in VALID_SERVER_NONCES:
+        logging.warning(f"Nonce already used: {nonce}")
+        return False
+    
+    # Mark nonce as used
+    VALID_SERVER_NONCES[nonce] = current_time
+    logging.info(f"Nonce accepted and marked as used: {nonce}")
+    return True
 
 
 def verify_timestamp(timestamp_str: str) -> bool:
@@ -149,18 +142,18 @@ async def handle_did_auth(authorization: str, domain: str) -> Dict:
             )
 
         # Unpack order: (did, nonce, timestamp, verification_method, signature)
-        did, nonce, timestamp, keyid, signature = header_parts
+        did, nonce, timestamp, verification_method, signature = header_parts
 
-        logging.info(f"Processing DID WBA authentication - DID: {did}, Key ID: {keyid}")
+        logging.info(f"Processing DID WBA authentication - DID: {did}, Verification Method: {verification_method}")
 
         # Verify timestamp
         if not verify_timestamp(timestamp):
             raise HTTPException(status_code=401, detail="Timestamp expired or invalid")
 
         # Verify nonce validity
-        # if not is_valid_server_nonce(nonce):
-        #     logging.error(f"Invalid or expired nonce: {nonce}")
-        #     raise HTTPException(status_code=401, detail="Invalid or expired nonce")
+        if not is_valid_server_nonce(nonce):
+            logging.error(f"Invalid or expired nonce: {nonce}")
+            raise HTTPException(status_code=401, detail="Invalid or expired nonce")
 
         # Try to resolve DID document using custom resolver
         did_document = await resolve_local_did_document(did)
@@ -206,7 +199,7 @@ async def handle_did_auth(authorization: str, domain: str) -> Dict:
             )
 
         # Generate access token
-        access_token = create_access_token(data={"sub": did, "keyid": keyid})
+        access_token = create_access_token(data={"sub": did})
 
         logging.info("Authentication successful, access token generated")
 

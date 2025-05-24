@@ -52,6 +52,7 @@ class Settings(BaseSettings):
         return [domain.strip() for domain in domains_str.split(",")]
 
     # Constants
+    # The nonce expiration time should be greater than the timestamp expiration time to prevent nonce replay attacks
     NONCE_EXPIRATION_MINUTES: int = 6
     TIMESTAMP_EXPIRATION_MINUTES: int = 5
     MAX_JSON_SIZE: int = 2048  # 2KB

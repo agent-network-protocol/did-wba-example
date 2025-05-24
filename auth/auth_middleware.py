@@ -117,6 +117,7 @@ async def auth_middleware(request: Request, call_next: Callable) -> Response:
         logging.info(f"Authenticated user: {request.state.headers}")
         headers = dict(request.headers)  # Read request headers
         request.state.headers = headers  # Store in request.state
+        
         if response_auth is not None:
             response = await call_next(request)
             if response_auth.get("token_type", " ") == "bearer":

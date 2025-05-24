@@ -24,7 +24,13 @@ def create_access_token(data: Dict, expires_delta: Optional[timedelta] = None) -
         str: Encoded JWT token
     """
     to_encode = data.copy()
-    expires = datetime.utcnow() + (
+    
+    # Add issued at time (iat)
+    now = datetime.utcnow()
+    to_encode.update({"iat": now})
+    
+    # Add expiration time (exp)
+    expires = now + (
         expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
     to_encode.update({"exp": expires})
@@ -74,11 +80,44 @@ async def handle_bearer_auth(token: str) -> Dict:
 
         # Check if token contains required fields
         if "sub" not in payload:
-            raise HTTPException(status_code=401, detail="Invalid token payload")
+            raise HTTPException(status_code=401, detail="Invalid token payload: missing 'sub' field")
+            
+        if "iat" not in payload:
+            raise HTTPException(status_code=401, detail="Invalid token payload: missing 'iat' field")
+            
+        if "exp" not in payload:
+            raise HTTPException(status_code=401, detail="Invalid token payload: missing 'exp' field")
 
-        return {"did": payload["sub"], "keyid": payload.get("keyid")}
+        # Validate DID format
+        did = payload["sub"]
+        if not did.startswith("did:wba:"):
+            raise HTTPException(status_code=401, detail="Invalid DID format")
 
-    except jwt.PyJWTError as e:
+        # Additional time validation (JWT library already validates exp)
+        now = datetime.utcnow()
+        iat = datetime.utcfromtimestamp(payload["iat"])
+        exp = datetime.utcfromtimestamp(payload["exp"])
+        
+        # Allow a small tolerance for clock skew (5 seconds)
+        tolerance = timedelta(seconds=5)
+        
+        # Check if token was issued too far in the future (invalid)
+        if iat > now + tolerance:
+            raise HTTPException(status_code=401, detail="Token issued in the future")
+            
+        # Check if token is already expired (redundant check, but explicit)
+        if exp <= now - tolerance:
+            raise HTTPException(status_code=401, detail="Token has expired")
+
+        return {"did": payload["sub"]}
+
+    except HTTPException:
+        # Re-raise HTTPException as-is
+        raise
+    except jwt.ExpiredSignatureError:
+        logging.error("JWT token has expired")
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError as e:
         logging.error(f"JWT token error: {e}")
         raise HTTPException(status_code=401, detail="Invalid token")
     except Exception as e:
