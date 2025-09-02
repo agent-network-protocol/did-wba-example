@@ -32,18 +32,23 @@ For detailed technical documentation, please refer to [Technical Documentation](
    ```
 3. Edit the .env file and set necessary configuration items
 
-### Install Dependencies with Poetry
+### Install Dependencies with uv
+
+[uv](https://github.com/astral-sh/uv) is an extremely fast Python package manager and resolver written in Rust.
 
 ```bash
-# Create virtual environment and install dependencies with Poetry
-poetry install
+# Install uv (if not already installed)
+curl -sSf https://astral.sh/uv/install.sh | sh
 
-# Activate virtual environment
-poetry shell
+# Create and activate virtual environment
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-# Or activate virtual environment this way (if it already exists)
-source .venv/bin/activate
+# Install project dependencies
+uv pip install -e .
 ```
+
+For more uv usage instructions, please refer to the [UV Guide](README-uv.md)
 
 ## Running the Example
 

@@ -1,32 +1,32 @@
-[tool.poetry]
+[project]
 name = "did-wba-server"
 version = "0.1.0"
 description = "DID WBA Server Example"
-authors = ["Your Name <your.email@example.com>"]
-packages = [
-    { include = "api" },
-    { include = "auth" },
-    { include = "core" },
-    { include = "utils" }
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi>=0.103.0,<1.0.0",
+    "uvicorn>=0.32.0,<1.0.0",
+    "python-dotenv>=1.0.0,<2.0.0",
+    "pyjwt>=2.8.0,<3.0.0",
+    "agent-connect>=0.3.5,<0.4.0",
+    "python-multipart>=0.0.6,<1.0.0",
+    "aiohttp>=3.8.5,<4.0.0",
+    "cryptography>=43.0.3,<44.0.0",
+    "canonicaljson>=2.0.0,<3.0.0",
+    "pydantic>=2.3.0,<3.0.0",
+    "pydantic-settings>=2.0.0,<3.0.0",
+    "pytest>=7.4.0,<8.0.0"
 ]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-fastapi = "^0.103.0"
-uvicorn = "^0.32.0"
-python-dotenv = "^1.0.0"
-pyjwt = "^2.8.0"
-agent-connect = "^0.3.5"
-python-multipart = "^0.0.6"
-aiohttp = "^3.8.5"
-cryptography = "^43.0.3"
-canonicaljson = "^2.0.0"
-pydantic = "^2.3.0"
-pydantic-settings = "^2.0.0"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.4.0"
-
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+packages = ["api", "auth", "core", "utils"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["api", "auth", "core", "utils"]

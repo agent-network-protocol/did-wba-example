@@ -30,18 +30,23 @@
    ```
 3. 编辑.env文件，设置必要的配置项
 
-### 使用Poetry安装依赖
+### 使用 uv 安装依赖
+
+[uv](https://github.com/astral-sh/uv) 是一个快速的 Python 包管理器和解析器，使用 Rust 编写。
 
 ```bash
-# 使用Poetry创建虚拟环境并安装依赖
-poetry install
+# 安装 uv (如果尚未安装)
+curl -sSf https://astral.sh/uv/install.sh | sh
 
-# 激活虚拟环境
-poetry shell
+# 创建并激活虚拟环境
+uv venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
-# 或者使用以下方式激活虚拟环境(如果已存在)
-source .venv/bin/activate
+# 安装项目依赖
+uv pip install -e .
 ```
+
+更多 uv 使用说明请参考 [UV 使用指南](README-uv.md)
 
 ## 运行示例
 
